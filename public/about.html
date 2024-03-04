@@ -1,111 +1,20 @@
-<!--About-->
+const express = require('express');
+const mongoose = require('mongoose');
+const Budget = require('./models/Budget'); // Assuming you have a Budget model
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Budget</title>
-    <meta name="description" content="A free personal budget app">
-    <meta name="keywords" content="app free budget finance">
-    <link rel="stylesheet" href="reset.css">
-    <link rel="stylesheet" href="main.css">
-</head>
-<body>
+const app = express();
 
-<!-- This is an A11y Change -->    
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/your-database-name', { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('MongoDB Connected'))
+    .catch(err => console.log(err));
 
-<a class="skip-to-content-link" href="#main">Skip to content</a>
+// Route to fetch budget data
+app.get('/budget', (req, res) => {
+    Budget.find()
+        .then(budgets => res.json(budgets))
+        .catch(err => console.log(err));
+});
 
-<nav>
-    <ul>
-
-<!--Changed to /pb/public/-->
-
-        <li><a href="./index.html">Home</a></li>
-<!--Changed to ./about.html-->
-        <li><a href="./about.html">About</a></li>
-<!--Changed to ./login/.html-->
-        <li><a href="./login.html">Login</a></li>
-        <li><a href="https://google.com">Google</a></li>
-    </ul>
-</nav>
-
-
-    <div class="hero">
-        <h1>Personal Budget</h1>
-        <h2>A personal-budget management app</h2>
-    </div>
-
-    <main class="center" id="main">
-
-        <div class="page-area">
-
-            <article>
-                
-                <h2>About Us</h2>
-                <p>
-                    We are web developers that are offering a free Budget Calculator 
-                </p>
-            
-    
-            
-    
-        </div>
-
-    </main>
-
-    <footer class="bottom">
-        <div class="center">
-            All rights reserved &copy; Fabio Nolasco <br>
-                <!-- This is an SEO Change -->
-
-            <a href="mailto:@google.com">Click here to email us .</a>
-
-        </div>
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js" integrity="sha512-quHCp3WbBNkwLfYUMd+KwBAgpVukJu5MncuQaWXgCrfgcxCJAq/fo+oqrRKOj+UKEmyMCG3tb8RB63W+EmrOBg==" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js" integrity="sha512-s+xg36jbIujB2S2VKfpGmlC3T5V2TF3lY48DX7u2r9XzGzgPsa6wTpOQA7J9iffvdeBN0q9tKzRxVxw1JviZPg==" crossorigin="anonymous"></script>
-
-    <script>
-        var dataSource = {
-                datasets: [
-                    {
-                        data: [],
-                        backgroundColor: [
-                            '#ffcd56',
-                            '#ff6384',
-                            '#36a2eb',
-                            '#fd6b19',
-                        ]
-                    }
-                ],
-                labels: []
-            };
-
-        function createChart() {
-            var ctx = document.getElementById('myChart').getContext('2d');
-            var myPieChart = new Chart(ctx, {
-                type: 'pie',
-                data: dataSource
-            });
-        }
-
-        function getBudget() {
-            axios.get('http://localhost:3000/budget')
-            .then(function (res) {
-                for (var i = 0; i < res.data.myBudget.length; i++) {
-                    dataSource.datasets[0].data[i] = res.data.myBudget[i].budget;
-                    dataSource.labels[i] = res.data.myBudget[i].title;
-                    createChart();
-                }
-            });
-        }
-
-        getBudget();
-    </script>
-
-</body>
-</html>
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
