@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout Example</title>
+</head>
+<body>
+    <h1>You have successfully logged out</h1>
+
+    <script>
+        function logout() {
+            // Clear any authentication state (e.g., JWT token from local storage)
+            localStorage.removeItem("token");
+            
+            // Redirect the user to index.html after 10 seconds
+            setTimeout(function() {
+                window.location.href = "index.html";
+            }, 2000); // 10 seconds delay
+        }
+
+        // Call the logout function when the page loads
+        logout();
+    </script>
+</body>
+</html>

@@ -18,6 +18,7 @@
             <li><a href="./index.html">Home</a></li>
             <li><a href="./about.html">About</a></li>
             <li><a href="./login.html">Login</a></li>
+            <li><a href="./signup.html">Signup</a></li>
             <li><a href="https://google.com">Google</a></li>
         </ul>
     </nav>
@@ -63,15 +64,7 @@
                 </p>
             </article>
 
-            <article>
-                <h2>Chart with D3.js</h2>
-                <svg id="d3Chart" width="400" height="400"></svg>
-            </article>
-
-            <article>
-                <h2>Chart with Chart.js</h2>
-                <canvas id="chartjsChart" width="400" height="400"></canvas>
-            </article>
+            
         </div>
     </main>
 
@@ -82,84 +75,7 @@
         </div>
     </footer>
 
-    <script src="https://d3js.org/d3.v3.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js"></script>
-    <script>
-        axios.get('http://localhost:3000/budget')
-            .then(response => {
-                const responseData = response.data;
-                
-                // Data for D3.js
-                const d3Data = responseData.map(item => ({
-                    title: item.title,
-                    value: item.related_value // Corrected property name from budget to value
-                }));
-                
-                // Data for Chart.js
-                const chartjsData = {
-                    datasets: [{
-                        data: responseData.map(item => item.related_value),
-                        backgroundColor: responseData.map(item => item.color)
-                    }],
-                    labels: responseData.map(item => item.title)
-                };
-
-                createD3Chart(d3Data);
-                createChartJsChart(chartjsData);
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
-
-        // Function to create D3.js chart
-        function createD3Chart(data) {
-            var width = 300,
-                height = 300,
-                radius = Math.min(width, height) / 2;
-
-            var color = d3.scale.category20();
-
-            var arc = d3.svg.arc()
-                .outerRadius(radius - 10)
-                .innerRadius(0);
-
-            var pie = d3.layout.pie()
-                .sort(null)
-                .value(function(d) { return d.value; });
-
-            var svg = d3.select("#d3Chart")
-                .append("svg")
-                .attr("width", width)
-                .attr("height", height)
-                .append("g")
-                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-            var g = svg.selectAll(".arc")
-                .data(pie(data))
-                .enter().append("g")
-                .attr("class", "arc");
-
-            g.append("path")
-                .attr("d", arc)
-                .style("fill", function(d) { return color(d.data.title); });
-
-            g.append("text")
-                .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
-                .attr("dy", ".35em")
-                .style("text-anchor", "middle")
-                .text(function(d) { return d.data.title; });
-        }
-
-        // Function to create Chart.js chart
-        function createChartJsChart(data) {
-            var ctx = document.getElementById("chartjsChart").getContext("2d");
-            var chartjsChart = new Chart(ctx, {
-                type: 'pie',
-                data: data
-            });
-        }
-    </script>
+   
 
 </body>
 </html>

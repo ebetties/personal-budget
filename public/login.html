@@ -1,7 +1,3 @@
-<!--Login-->
-
-<!--About-->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,101 +10,144 @@
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
+    <div class="main-container">
+        <a class="skip-to-content-link" href="#main">Skip to content</a>
 
-<!-- This is an A11y Change -->    
+        <nav>
+            <ul>
+                <li><a href="./index.html">Home</a></li>
+            </ul>
+        </nav>
 
-<a class="skip-to-content-link" href="#main">Skip to content</a>
-
-<nav>
-    <ul>
-
-<!--Changed to /pb/public/-->
-
-        <li><a href="./index.html">Home</a></li>
-<!--Changed to ./about.html-->
-        <li><a href="./about.html">About</a></li>
-<!--Changed to ./login/.html-->
-        <li><a href="./login.html">Login</a></li>
-        <li><a href="https://google.com">Google</a></li>
-    </ul>
-</nav>
-
-
-    <div class="hero">
-        <h1>Personal Budget</h1>
-        <h2>A personal-budget management app</h2>
-    </div>
-
-    <main class="center" id="main">
-
-        <div class="page-area">
-
-            <article>
-                <!-- This is a Semantic HTML Change -->
-                <h2>Login</h2>
-                <p>
-                    Under Construction.<br>  Login page is coming soon
-                </p>
-            
-    
-            
-    
+        <div class="hero">
+            <h1>Personal Budget</h1>
+            <h2>A personal-budget management app</h2>
         </div>
 
-    </main>
+        <main class="center" id="main">
+            <div class="page-area">
+                <h2>Login</h2>
+                <form id="loginForm">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                    <button type="submit">Login</button>
+                    <div id="loginFeedback" style="display: none;"></div>
+                </form>
+            </div>
+        </main>
+    </div>
 
     <footer class="bottom">
         <div class="center">
             All rights reserved &copy; Fabio Nolasco <br>
-                <!-- This is an SEO Change -->
-
-            <a href="mailto:@google.com">Click here to email us .</a>
-
+            <a href="mailto:@google.com">Click here to email us.</a>
         </div>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js" integrity="sha512-quHCp3WbBNkwLfYUMd+KwBAgpVukJu5MncuQaWXgCrfgcxCJAq/fo+oqrRKOj+UKEmyMCG3tb8RB63W+EmrOBg==" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js" integrity="sha512-s+xg36jbIujB2S2VKfpGmlC3T5V2TF3lY48DX7u2r9XzGzgPsa6wTpOQA7J9iffvdeBN0q9tKzRxVxw1JviZPg==" crossorigin="anonymous"></script>
+    <!-- External JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js"></script>
 
     <script>
-        var dataSource = {
-                datasets: [
-                    {
-                        data: [],
-                        backgroundColor: [
-                            '#ffcd56',
-                            '#ff6384',
-                            '#36a2eb',
-                            '#fd6b19',
-                        ]
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent the form from submitting normally
+            
+            // Get the values of email and password
+            var email = document.getElementById("email").value;
+            var password = document.getElementById("password").value;
+            
+            // Validate email and password fields
+            if (!email || !password) {
+                var loginFeedback = document.getElementById("loginFeedback");
+                loginFeedback.innerText = "Please enter both email and password.";
+                loginFeedback.style.display = "block";
+                return;
+            }
+            
+            // Show login feedback
+            var loginFeedback = document.getElementById("loginFeedback");
+            loginFeedback.style.display = "none";
+            
+            // Send the login request to the backend server
+            axios.post("/login", { email: email, password: password })
+                .then(function(response) {
+                    // Check if login was successful (server should return a JWT token)
+                    if (response.data && response.data.token) {
+                        // Store the token securely (e.g., in local storage)
+                        localStorage.setItem("token", response.data.token);
+                        // Redirect to the dashboard page
+                        window.location.href = "dashboard.html";
+                    } else {
+                        // Handle login failure (e.g., display an error message)
+                        loginFeedback.innerText = "Invalid email or password.";
+                        loginFeedback.style.display = "block";
                     }
-                ],
-                labels: []
-            };
+                })
+                .catch(function(error) {
+                    // Check if the error is a 401 Unauthorized error
+                    if (error.response && error.response.status === 401) {
+                        // Handle 401 error (e.g., display an error message)
+                        loginFeedback.innerText = "Unauthorized: Incorrect email or password.";
+                        loginFeedback.style.display = "block";
+                    } else {
+                        // Handle other errors (e.g., display a generic error message)
+                        console.error("Login error:", error);
+                        loginFeedback.innerText = "An error occurred while logging in. Please try again later.";
+                        loginFeedback.style.display = "block";
+                    }
+                });
+        });
 
-        function createChart() {
-            var ctx = document.getElementById('myChart').getContext('2d');
-            var myPieChart = new Chart(ctx, {
-                type: 'pie',
-                data: dataSource
-            });
+        // Token expiry warning logic
+        let tokenExpirationWarningTimer;
+
+        function refreshToken() {
+            axios.get('http://localhost:3000/refreshToken')
+                .then(response => {
+                    const { token } = response.data;
+                    localStorage.setItem('token', token);
+                    hideWarning();
+                    // Redirect to homepage after refreshing token
+                    window.location.href = 'homepage.html';
+                })
+                .catch(error => {
+                    console.error('Error refreshing token:', error);
+                });
         }
 
-        function getBudget() {
-            axios.get('http://localhost:3000/budget')
-            .then(function (res) {
-                for (var i = 0; i < res.data.myBudget.length; i++) {
-                    dataSource.datasets[0].data[i] = res.data.myBudget[i].budget;
-                    dataSource.labels[i] = res.data.myBudget[i].title;
-                    createChart();
-                }
-            });
+        function showWarning() {
+            document.getElementById('warning').style.display = 'block';
+            tokenExpirationWarningTimer = setTimeout(hideWarning, 20000); // Hide warning after 20 seconds
         }
 
-        getBudget();
+        function hideWarning() {
+            document.getElementById('warning').style.display = 'none';
+            clearTimeout(tokenExpirationWarningTimer);
+        }
+
+        function checkTokenExpiration() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // Token not found, redirect to login page
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const decodedToken = jwt_decode(token);
+            const currentTime = Math.floor(Date.now() / 1000); // Get current time in seconds
+            if (decodedToken.exp - currentTime < 20) {
+                // Less than 20 seconds left until token expiration, show warning
+                showWarning();
+            }
+        }
+
+        // Check token expiration when the page loads
+        checkTokenExpiration();
+
+
+
+        
     </script>
-
 </body>
 </html>
-
-

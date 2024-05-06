@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Budget</title>
+    <meta name="description" content="A free personal budget app">
+    <meta name="keywords" content="app free budget finance">
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+    <a class="skip-to-content-link" href="#main">Skip to content</a>
+
+    <nav>
+        <ul>
+            <li><a href="./index.html">Home</a></li>
+            <li><a href="./about.html">About</a></li>
+            <li><a href="./login.html">Login</a></li>
+            <li><a href="https://google.com">Google</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero">
+        <h1>Personal Budget</h1>
+        <h2>A personal-budget management app</h2>
+    </div>
+
+    <main class="center" id="main">
+        <div class="page-area">
+            <div class="signup-container">
+                <h1>Sign Up</h1>
+                <form id="signupForm">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                    <button type="submit">Sign Up</button>
+                </form>
+                <p id="message"></p>
+
+                <!-- Feedback message -->
+                <p id="signupFeedback"></p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bottom">
+        <div class="center">
+            All rights reserved &copy; Fabio <br>
+            <a href="mailto:@google.com">Click here to email us.</a>
+        </div>
+    </footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    document.getElementById("signupForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // Prevent the form from submitting normally
+        
+        // Get the values of email and password
+        var email = document.getElementById("email").value;
+        var password = document.getElementById("password").value;
+        
+        // Show signup feedback
+        var signupFeedback = document.getElementById("message");
+        signupFeedback.style.display = "none";
+        
+        // Send the signup request to the backend server using Axios
+        axios.post("/myBudget/users", { email: email, password: password })
+            .then(function(response) {
+                // Check if response.data contains an error property
+                if (response.data && response.data.error) {
+                    // Signup failed, display error message
+                    signupFeedback.innerText = response.data.error;
+                    signupFeedback.style.display = "block";
+                } else {
+                    // Signup successful, redirect to the login page
+                    window.location.href = "login.html";
+                }
+            })
+            .catch(function(error) {
+                // Check if the error is an Axios error
+                if (error.isAxiosError === true) {
+                    // Handle Axios error
+                    console.error("Axios error:", error);
+                    signupFeedback.innerText = "An error occurred while signing up. Please try again later.";
+                    signupFeedback.style.display = "block";
+                } else {
+                    // Handle other types of errors
+                    console.error("Other error:", error);
+                    signupFeedback.innerText = "An unexpected error occurred while signing up. Please try again later.";
+                    signupFeedback.style.display = "block";
+                }
+            });
+    });
+</script>

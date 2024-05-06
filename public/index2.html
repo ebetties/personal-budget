@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Budget</title>
+    <meta name="description" content="A free personal budget app">
+    <meta name="keywords" content="app free budget finance">
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+    <a class="skip-to-content-link" href="#main">Skip to content</a>
+
+    <nav>
+        <ul>
+            <li><a href="./index.html">Home</a></li>
+            <li><a href="./about.html">About</a></li>
+            <li><a href="./login.html">Login</a></li>
+            <li><a href="https://google.com">Google</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero">
+        <h1>Personal Budget</h1>
+        <h2>A personal-budget management app</h2>
+    </div>
+
+    <main class="center" id="main">
+        <div class="page-area">
+            <!-- Chart with D3.js -->
+            <article>
+                <h2>Chart with D3.js</h2>
+                <svg id="d3Chart" width="400" height="400"></svg>
+            </article>
+
+            <!-- Chart with Chart.js -->
+            <article>
+                <h2>Chart with Chart.js</h2>
+                <canvas id="chartjsChart" width="400" height="400"></canvas>
+            </article>
+
+            <!-- Bar Chart with D3.js -->
+            <article>
+                <h2>Bar Chart with D3.js</h2>
+                <svg id="d3BarChart" width="400" height="400"></svg>
+            </article>
+            
+        </div>
+    </main>
+
+    <footer class="bottom">
+        <div class="center">
+            All rights reserved &copy; Fabio <br>
+            <a href="mailto:@google.com">Click here to email us.</a>
+        </div>
+    </footer>
+
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js"></script>
+    <script>
+        axios.get('http://localhost:3000/budget')
+            .then(response => {
+                const responseData = response.data;
+                
+                // Data for D3.js
+                const d3Data = responseData.map(item => ({
+                    title: item.title,
+                    value: item.related_value // Corrected property name from budget to value
+                }));
+                
+                // Data for Chart.js
+                const chartjsData = {
+                    datasets: [{
+                        data: responseData.map(item => item.related_value),
+                        backgroundColor: responseData.map(item => item.color)
+                    }],
+                    labels: responseData.map(item => item.title)
+                };
+
+                createD3Chart(d3Data);
+                createChartJsChart(chartjsData);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+
+   // Function to create D3.js chart
+function createD3Chart(data) {
+    var width = 300,
+        height = 300,
+        radius = Math.min(width, height) / 2;
+
+    var color = d3.scale.category20();
+
+    var arc = d3.svg.arc()
+        .outerRadius(radius - 10)
+        .innerRadius(0);
+
+    var pie = d3.layout.pie()
+        .sort(null)
+        .value(function(d) { return d.value; });
+
+    var svg = d3.select("#d3Chart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+    var g = svg.selectAll(".arc")
+        .data(pie(data))
+        .enter().append("g")
+        .attr("class", "arc");
+
+    g.append("path")
+        .attr("d", arc)
+        .style("fill", function(d) { return color(d.data.title); });
+
+    g.append("text")
+        .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+        .attr("dy", ".35em")
+        .style("text-anchor", "middle")
+        .text(function(d) { return d.data.title; });
+
+    // Add polylines
+    g.append("polyline")
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("fill", "none")
+        .attr("points", function(d) {
+            var labelPoint = arc.centroid(d);
+            labelPoint[0] = radius * 0.95 * (labelPoint[0] / Math.sqrt(labelPoint[0] * labelPoint[0] + labelPoint[1] * labelPoint[1]));
+            labelPoint[1] = radius * 0.95 * (labelPoint[1] / Math.sqrt(labelPoint[0] * labelPoint[0] + labelPoint[1] * labelPoint[1]));
+            return [arc.centroid(d), labelPoint];
+        });
+
+    // Move the title to the end of the polyline
+    g.selectAll("text")
+        .attr("transform", function(d) {
+            var labelPoint = arc.centroid(d);
+            labelPoint[0] = radius * 0.95 * (labelPoint[0] / Math.sqrt(labelPoint[0] * labelPoint[0] + labelPoint[1] * labelPoint[1]));
+            labelPoint[1] = radius * 0.95 * (labelPoint[1] / Math.sqrt(labelPoint[0] * labelPoint[0] + labelPoint[1] * labelPoint[1]));
+            return "translate(" + labelPoint + ")";
+        });
+}
+
+
+        // Function to create Chart.js chart
+        function createChartJsChart(data) {
+            var ctx = document.getElementById("chartjsChart").getContext("2d");
+            var chartjsChart = new Chart(ctx, {
+                type: 'pie',
+                data: data
+            });
+        }
+
+       // Function to create D3.js bar chart
+function createD3BarChart(data) {
+    var margin = { top: 20, right: 20, bottom: 30, left: 40 },
+        width = 400 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+
+    var x = d3.scale.ordinal()
+        .rangeRoundBands([0, width], .1);
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+
+    var color = d3.scale.category20(); // Define color scale
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+    var svg = d3.select("#d3BarChart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    x.domain(data.map(function(d) { return d.title; }));
+    y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Value");
+
+    svg.selectAll(".bar")
+        .data(data)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d) { return x(d.title); })
+        .attr("width", x.rangeBand())
+        .attr("y", function(d) { return y(d.value); })
+        .attr("height", function(d) { return height - y(d.value); })
+        .style("fill", function(d) { return color(d.value); }); // Set bar color based on data value
+}
+
+axios.get('http://localhost:3000/budget')
+    .then(response => {
+        const responseData = response.data;
+        
+        // Data for D3.js bar chart
+        const d3BarData = responseData.map(item => ({
+            title: item.title,
+            value: item.related_value // Corrected property name from budget to value
+        }));
+        
+        createD3BarChart(d3BarData);
+    })
+    .catch(error => {
+        console.error('Error fetching data:', error);
+    });
+
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+<p>You have logged out successfully</p>
+
+
+<script>
+    // Redirect to homepage after 10 seconds
+    setTimeout(function() {
+        window.location.href = "index.html";
+    }, 5000); // 10 seconds in milliseconds
+
+    // Rest of your JavaScript code...
+
+    // Signout logic
+function signOut() {
+  // Clear the token from local storage
+  localStorage.removeItem('token');
+  
+  // Redirect the user to the login page or homepage
+  window.location.href = '/login'; // or any other appropriate URL
+}
+
+</script>
+

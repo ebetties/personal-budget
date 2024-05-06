@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Budget</title>
+    <meta name="description" content="A free personal budget app">
+    <meta name="keywords" content="app free budget finance">
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body onload="fetchDataAndRefreshUI()">
+    <a class="skip-to-content-link" href="#main">Skip to content</a>
+
+    <nav>
+        <ul>
+            <li><a href="./logout.html">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero">
+        <h1>Personal Budget</h1>
+        <h2>A personal-budget management app</h2>
+    </div>
+
+    <main class="center" id="main">
+        <form id="addItemForm">
+            <!-- Form for adding items -->
+        </form>
+
+        <form id="updateItemForm">
+            <!-- Form for updating items -->
+        </form>
+
+        <form id="deleteItemForm">
+            <!-- Form for deleting items -->
+        </form>
+
+        <article>
+            <h2>Chart with D3.js</h2>
+            <svg id="d3Chart" width="600" height="600"></svg>
+        </article>
+
+        <article>
+            <h2>Chart with Chart.js</h2>
+            <canvas id="chartjsChart" width="600" height="400"></canvas>
+        </article>
+
+        <article>
+            <h2>Bar Chart with D3.js</h2>
+            <svg id="barChart" width="600" height="400"></svg>
+        </article>
+
+        <ul id="itemList"></ul> <!-- Add this line -->
+    </main>
+
+    <footer class="bottom">
+        <div class="center">
+            All rights reserved &copy; Fabio <br>
+            <a href="mailto:@google.com">Click here to email us.</a>
+        </div>
+    </footer>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js"></script>
+    
+    <script>
+        function logout() {
+            localStorage.removeItem("token");
+            window.location.href = "index.html";
+        }
+    
+        function fetchDataAndRefreshUI() {
+            axios.get('http://localhost:3000/myBudget')
+                .then(response => {
+                    const responseData = response.data;
+                    updateUI(responseData);
+                    createCharts(responseData); // Call chart creation function after fetching data
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    
+        function updateUI(data) {
+            const itemList = document.getElementById('itemList');
+            if (itemList) {
+                itemList.innerHTML = '';
+    
+                data.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${item.title}: ${item.related_value}`; // Corrected field name
+                    itemList.appendChild(listItem);
+                });
+            }
+        }
+    
+        function createCharts(data) {
+            const d3Data = data.map(item => ({
+                title: item.title,
+                value: item.related_value,
+                color: item.color
+            }));
+    
+            const chartjsData = {
+                datasets: [{
+                    data: data.map(item => item.related_value),
+                    backgroundColor: data.map(item => item.color)
+                }],
+                labels: data.map(item => item.title)
+            };
+    
+            createD3Chart(d3Data);
+            createChartJsChart(chartjsData);
+            createBarChart(d3Data);
+        }
+        
+        function createD3Chart(data) {
+            // D3.js chart creation function
+        }
+
+        function createChartJsChart(data) {
+            // Chart.js chart creation function
+        }
+
+        function createBarChart(data) {
+            // Bar chart creation function
+        }
+    </script>
+</body>
+</html>
+
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+
+  // Function to create D3.js chart
+function createD3Chart(data) {
+    var width = 600,
+        height = 600,
+        radius = Math.min(width, height) / 3;
+
+    var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    var arc = d3.arc()
+        .outerRadius(radius - 10)
+        .innerRadius(0);
+
+    var outerArc = d3.arc()
+        .innerRadius(radius * 0.9)
+        .outerRadius(radius * 0.9);
+
+    var pie = d3.pie()
+        .sort(null)
+        .value(function(d) { return d.value; });
+
+    var svg = d3.select("#d3Chart")
+        .attr("viewBox", [-width / 2, -height / 2, width, height])
+        .attr("width", width)
+        .attr("height", height);
+
+    var arcs = pie(data);
+
+    svg.selectAll("path")
+        .data(arcs)
+        .join("path")
+        .attr("fill", d => color(d.data.title))
+        .attr("d", arc)
+        .append("title")
+        .text(d => `${d.data.title}: ${d.data.value}`);
+
+    // Add polyline for each slice
+    svg.selectAll("polyline")
+        .data(arcs)
+        .enter().append("polyline")
+        .attr("stroke", "black")
+        .attr("stroke-width", 2)
+        .attr("fill", "none")
+        .attr("points", function(d) {
+            var pos = outerArc.centroid(d);
+            pos[0] = radius * 0.95 * (midAngle(d) < Math.PI ? 1 : -1);
+            return [arc.centroid(d), outerArc.centroid(d), pos];
+        });
+
+    // Add text for titles
+    svg.selectAll("text")
+        .data(arcs)
+        .enter()
+        .append("text")
+        .attr("transform", function(d) {
+            var pos = outerArc.centroid(d);
+            pos[0] = radius * 0.95 * (midAngle(d) < Math.PI ? 1 : -1);
+            return `translate(${pos})`;
+        })
+        .attr("dy", "0.35em")
+        .attr("text-anchor", function(d) {
+            return midAngle(d) < Math.PI ? "start" : "end";
+        })
+        .text(d => d.data.title + " $" + d.value);
+}
+
+// Calculate mid angle of the arc
+function midAngle(d) {
+    return d.startAngle + (d.endAngle - d.startAngle) / 2;
+}
+
+
+        // Function to create Chart.js chart
+        function createChartJsChart(data) {
+            var ctx = document.getElementById("chartjsChart").getContext("2d");
+            var chartjsChart = new Chart(ctx, {
+                type: 'pie',
+                data: data
+            });
+        }
+
+         // Function to create D3.js bar chart
+         function createBarChart(data) {
+            const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+            const width = document.getElementById("main").offsetWidth * 0.45 - margin.left - margin.right; // 75% width of the main container
+            const height = 400 - margin.top - margin.bottom;
+
+            const svg = d3.select("#barChart")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.title))
+                .range([10, width])
+                .padding(0.4);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.value)])
+                .range([height, 0]);
+
+            svg.selectAll(".bar")
+                .data(data)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.title))
+                .attr("width", x.bandwidth())
+                .attr("y", d => y(d.value))
+                .attr("height", d => height - y(d.value))
+                .attr("fill", d => d.color);
+
+            svg.selectAll("text")
+                .data(data)
+                .enter().append("text")
+                .attr("x", d => x(d.title) + x.bandwidth() / 2)
+                .attr("y", d => y(d.value) - 5)
+                .attr("text-anchor", "middle")
+                .text(d => "$" + d.value);
+
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x));
+
+            svg.append("g")
+                .call(d3.axisLeft(y));
+        }
+    </script>
+</body>
+</html>
