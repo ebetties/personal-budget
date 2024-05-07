@@ -300,8 +300,11 @@ if (!localStorage.getItem('token')) {
         // Render total budget in HTML
         document.getElementById('budgetUsed').textContent = `Budget Used: $${totalBudget}`;
 
-        0
+        // You may want to fetch the budget for the month from another endpoint or calculate it in some other way
         
+        // For demonstration purposes, let's assume the budget for the month is $2000
+        const budgetForMonth = 2000;
+
         // Calculate budget over/under amount
         const budgetOverUnder = totalBudget - budgetForMonth;
 

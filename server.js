@@ -29,7 +29,10 @@ app.use(compression());
 // Connect to MongoDB
 //mongoose.connect('mongodb+srv://doadmin:0fSlX5z7s2M1964w@mongodb-8ce20673.mongo.ondigitalocean.com/admin?tls=true&authSource=admin&replicaSet=mongodb', {
 
-mongoose.connect('mongodb+srv://doadmin:0fSlX5z7s2M1964w@mongodb-8ce20673.mongo.ondigitalocean.com/admin?tls=true&authSource=admin&replicaSet=mongodb',{
+//mongoose.connect('mongodb+srv://doadmin:0fSlX5z7s2M1964w@mongodb-8ce20673.mongo.ondigitalocean.com/admin?tls=true&authSource=admin&replicaSet=mongodb',{
+  //mongoose.connect('mongodb+srv://doadmin:r3a65129uCBt0pR8@mongoeric-0411f237.mongo.ondigitalocean.com/admin?tls=true&authSource=admin',{
+    mongoose.connect('mongodb+srv://doadmin:r3a65129uCBt0pR8@mongoeric-0411f237.mongo.ondigitalocean.com/myBudget?tls=true&authSource=admin&replicaSet=mongoeric',{
+     
 
 useNewUrlParser: true,
 useUnifiedTopology: true
