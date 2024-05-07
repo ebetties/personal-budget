@@ -27,18 +27,19 @@ app.use(bodyParser.json());
 app.use(compression());
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/myBudget', { 
-  useNewUrlParser: true,
-  useUnifiedTopology: true
+mongoose.connect('mongodb+srv://doadmin:0fSlX5z7s2M1964w@mongodb-8ce20673.mongo.ondigitalocean.com/admin?tls=true&authSource=admin&replicaSet=mongodb', {
+
+useNewUrlParser: true,
+useUnifiedTopology: true
 })
 .then(() => {
-  console.log('Connected to MongoDB');
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+console.log('Connected to MongoDB');
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
 })
 .catch(err => {
-  console.error('Error connecting to MongoDB:', err);
+console.error('Error connecting to MongoDB:', err);
 });
 
 // Schema for user
@@ -53,6 +54,7 @@ const User = mongoose.model('User', UserSchema);
 function generateAuthToken(user) {
   return jwt.sign({ userId: user.id, userEmail: user.email }, secretKey, { expiresIn: '1m' });
 }
+
 
 // Signup route
 app.post('/myBudget/users', async (req, res) => {
