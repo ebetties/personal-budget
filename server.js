@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
+// const jwt = require('jsonwebtoken'); // Commented out JWT
 const bodyParser = require('body-parser');
 const path = require('path');
 const compression = require('compression');
@@ -11,8 +11,8 @@ const Budget = require('./models/myBudget.schema');
 const cookieParser = require('cookie-parser');
 
 const crypto = require('crypto');
-const secretKey = crypto.randomBytes(32).toString('hex');
-console.log('Secret Key:', secretKey);
+// const secretKey = crypto.randomBytes(32).toString('hex'); // Commented out JWT
+// console.log('Secret Key:', secretKey); // Commented out JWT
 
 
 const app = express();
@@ -27,24 +27,18 @@ app.use(bodyParser.json());
 app.use(compression());
 
 // Connect to MongoDB
-//mongoose.connect('mongodb+srv://doadmin:0fSlX5z7s2M1964w@mongodb-8ce20673.mongo.ondigitalocean.com/admin?tls=true&authSource=admin&replicaSet=mongodb', {
-
-//mongoose.connect('mongodb+srv://doadmin:0fSlX5z7s2M1964w@mongodb-8ce20673.mongo.ondigitalocean.com/admin?tls=true&authSource=admin&replicaSet=mongodb',{
-  //mongoose.connect('mongodb+srv://doadmin:r3a65129uCBt0pR8@mongoeric-0411f237.mongo.ondigitalocean.com/admin?tls=true&authSource=admin',{
-    mongoose.connect('mongodb+srv://doadmin:r3a65129uCBt0pR8@mongoeric-0411f237.mongo.ondigitalocean.com/myBudget?tls=true&authSource=admin&replicaSet=mongoeric',{
-     
-
-useNewUrlParser: true,
-useUnifiedTopology: true
+mongoose.connect('mongodb+srv://doadmin:07JndKlv94851ab3@mybudget-ad997177.mongo.ondigitalocean.com/myBudget?tls=true&authSource=admin&replicaSet=mybudget',{
+  useNewUrlParser: true,
+  useUnifiedTopology: true
 })
 .then(() => {
-console.log('Connected to MongoDB');
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+  console.log('Connected to MongoDB');
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
 })
 .catch(err => {
-console.error('Error connecting to MongoDB:', err);
+  console.error('Error connecting to MongoDB:', err);
 });
 
 // Schema for user
@@ -56,10 +50,9 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 
 // Function to generate JWT token
-function generateAuthToken(user) {
-  return jwt.sign({ userId: user.id, userEmail: user.email }, secretKey, { expiresIn: '1m' });
-}
-
+// function generateAuthToken(user) { // Commented out JWT
+//   return jwt.sign({ userId: user.id, userEmail: user.email }, secretKey, { expiresIn: '1m' }); // Commented out JWT
+// }
 
 // Signup route
 app.post('/myBudget/users', async (req, res) => {
@@ -74,10 +67,10 @@ app.post('/myBudget/users', async (req, res) => {
       const newUser = new User({ email, password: hashedPassword });
       await newUser.save();
       
-      const token = generateAuthToken(newUser);
-      res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true });
+      // const token = generateAuthToken(newUser); // Commented out JWT
+      // res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true }); // Commented out JWT
       
-      res.status(201).json({ message: 'User created successfully', token });
+      res.status(201).json({ message: 'User created successfully' }); // Removed token from response
   } catch (err) {
       console.error('Error signing up:', err);
       res.status(500).json({ error: 'Internal server error' });
@@ -99,10 +92,10 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const token = generateAuthToken(user);
+    // const token = generateAuthToken(user); // Commented out JWT
 
-    res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true });
-    res.json({ token });
+    // res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true }); // Commented out JWT
+    res.json({ message: 'Login successful' }); // Removed token from response
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -110,34 +103,35 @@ app.post('/login', async (req, res) => {
 });
 
 // Middleware to verify JWT token
-function verifyToken(req, res, next) {
-  const token = req.cookies.authToken;
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+// function verifyToken(req, res, next) { // Commented out JWT
+//   const token = req.cookies.authToken; // Commented out JWT
+//   if (!token) { // Commented out JWT
+//     return res.status(401).json({ error: 'Unauthorized' }); // Commented out JWT
+//   } // Commented out JWT
 
-  jwt.verify(token, secretKey, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    req.user = decoded;
-    next();
-  });
-}
+//   jwt.verify(token, secretKey, (err, decoded) => { // Commented out JWT
+//     if (err) { // Commented out JWT
+//       return res.status(401).json({ error: 'Unauthorized' }); // Commented out JWT
+//     } // Commented out JWT
+//     req.user = decoded; // Commented out JWT
+//     next(); // Commented out JWT
+//   }); // Commented out JWT
+// }
 
 // Dashboard route (requires valid JWT token)
-app.get('/dashboard', verifyToken, (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard.html'));
-});
+// app.get('/dashboard', verifyToken, (req, res) => { // Commented out JWT
+//   res.sendFile(path.join(__dirname, 'dashboard.html')); // Commented out JWT
+// });
 
 // Logout route
-app.post('/logout', verifyToken, (req, res) => {
+app.post('/logout', (req, res) => { // Removed verifyToken middleware
   res.clearCookie('authToken');
   res.status(200).json({ message: 'User signed out successfully' });
 });
 
 // Fetch data from MongoDB and send it as JSON (requires valid JWT token)
-app.get('/budget', verifyToken, async (req, res) => {
+// app.get('/budget', verifyToken, async (req, res) => { // Commented out JWT
+app.get('/budget', async (req, res) => { // Removed verifyToken middleware
   try {
     const data = await Budget.find();
     res.json(data);
@@ -148,7 +142,8 @@ app.get('/budget', verifyToken, async (req, res) => {
 });
 
 // Add new data to MongoDB (requires valid JWT token)
-app.post('/budget', verifyToken, async (req, res) => {
+// app.post('/budget', verifyToken, async (req, res) => { // Commented out JWT
+app.post('/budget', async (req, res) => { // Removed verifyToken middleware
   try {
     const { title, related_value, color } = req.body;
     const newData = new Budget({ title, related_value, color });
@@ -161,7 +156,8 @@ app.post('/budget', verifyToken, async (req, res) => {
 });
 
 // Update existing data in MongoDB by title (requires valid JWT token)
-app.put('/budget/:title', verifyToken, async (req, res) => {
+// app.put('/budget/:title', verifyToken, async (req, res) => { // Commented out JWT
+app.put('/budget/:title', async (req, res) => { // Removed verifyToken middleware
   try {
     const { title } = req.params;
     const { related_value, color } = req.body;
@@ -183,7 +179,8 @@ app.put('/budget/:title', verifyToken, async (req, res) => {
 });
 
 // Delete existing data from MongoDB (requires valid JWT token)
-app.delete('/budget/:title', verifyToken, async (req, res) => {
+// app.delete('/budget/:title', verifyToken, async (req, res) => { // Commented out JWT
+app.delete('/budget/:title', async (req, res) => { // Removed verifyToken middleware
   try {
     const { title } = req.params;
     const deletedData = await Budget.findOneAndDelete({ title });
@@ -198,7 +195,8 @@ app.delete('/budget/:title', verifyToken, async (req, res) => {
 });
 
 // Add a new route to create a new database (requires valid JWT token)
-app.post('/new-budget', verifyToken, async (req, res) => {
+// app.post('/new-budget', verifyToken, async (req, res) => { // Commented out JWT
+app.post('/new-budget', async (req, res) => { // Removed verifyToken middleware
   try {
     // Drop the existing database
     await mongoose.connection.dropDatabase();
@@ -211,7 +209,5 @@ app.post('/new-budget', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-
 
 module.exports = app;
