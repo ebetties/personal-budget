@@ -40,21 +40,6 @@
             });
     });
 
-    // Function to refresh token
-    function refreshToken() {
-        axios.get('http://localhost:3000/refreshToken')
-            .then(response => {
-                const { token } = response.data;
-                localStorage.setItem('token', token);
-                hideWarning();
-                // Redirect to dashboard page after refreshing token
-                window.location.href = 'dashboard.html';
-            })
-            .catch(error => {
-                console.error('Error refreshing token:', error);
-            });
-    }
-
     // Function to display token expiry warning
     function showWarning() {
         document.getElementById('expirationWarning').style.display = 'block';
