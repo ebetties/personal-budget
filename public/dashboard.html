@@ -560,15 +560,7 @@ function fetchDataAndRefreshUI() {
 }
 
 
-axios.post('http://localhost:3000/login', { email, password })
-    .then(response => {
-        window.location.href = '/dashboard'; // Redirect to the dashboard page
-    })
-    .catch(error => {
-        console.error('Error logging in:', error);
-        // Handle login error
-        alert('Invalid email or password');
-    });
+
 
 
 
