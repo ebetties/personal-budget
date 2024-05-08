@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken'); // Add JWT import
 
 const Budget = require('./models/myBudget.schema');
+const tokenRouter = require('./tokenManagement'); // Import the router
 
 const app = express();
 const port = 3000;
@@ -52,6 +53,8 @@ console.log('Secret Key:', secretKey);
 function generateAuthToken(user) {
   return jwt.sign({ userId: user.id, userEmail: user.email }, secretKey, { expiresIn: '1h' }); // Token expires in 1 hour
 }
+
+app.use(tokenRouter);
 
 // Login endpoint
 app.post('/login', async (req, res) => {

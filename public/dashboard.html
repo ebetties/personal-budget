@@ -477,9 +477,6 @@ document.getElementById('deleteBudgetItemForm').addEventListener('submit', funct
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Fetch budget data and refresh UI
-    fetchDataAndRefreshUI();
-
     // Set budget button click event listener
     document.getElementById('setBudgetBtn').addEventListener('click', function(event) {
         event.preventDefault();
@@ -499,6 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
 
 document.getElementById('newBudgetBtn').addEventListener('click', function() {
   axios.post('http://localhost:3000/new-budget')
@@ -554,31 +552,32 @@ function fetchDataAndRefreshUI() {
     }
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Access email and password input elements here
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
 
-axios.post('http://localhost:3000/login', { email, password })
-    .then(response => {
-        window.location.href = '/dashboard'; // Redirect to the dashboard page
-    })
-    .catch(error => {
-        console.error('Error logging in:', error);
-        // Handle login error
-        alert('Invalid email or password');
-    });
+    // Check if the input elements exist
+    if (emailInput && passwordInput) {
+        // Access their values
+        const email = emailInput.value;
+        const password = passwordInput.value;
 
-
-
-    axios.post('http://localhost:3000/login', { email, password })
-    .then(response => {
-        const token = response.data.token;
-        localStorage.setItem('token', token); // Store the token in local storage
-        window.location.href = '/dashboard'; // Redirect to the dashboard page
-    })
-    .catch(error => {
-        console.error('Error logging in:', error);
-        // Handle login error
-        alert('Invalid email or password');
-    });
-
+        // Perform axios POST request to login
+        axios.post('http://localhost:3000/login', { email, password })
+            .then(response => {
+                // Handle successful login
+                const token = response.data.token;
+                localStorage.setItem('token', token); // Store the token in local storage
+                window.location.href = '/dashboard'; // Redirect to the dashboard page
+            })
+            .catch(error => {
+                // Handle login error
+                console.error('Error logging in:', error);
+                alert('Invalid email or password');
+            });
+    }
+});
 
 
     </script>

@@ -1,57 +1,148 @@
-<script>
-    document.getElementById("loginForm").addEventListener("submit", function(event) {
-        event.preventDefault(); // Prevent the form from submitting normally
-        
-        // Get the values of email and password
-        var email = document.getElementById("email").value;
-        var password = document.getElementById("password").value;
-        
-        // Validate email and password fields
-        if (!email || !password) {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Budget</title>
+    <meta name="description" content="A free personal budget app">
+    <meta name="keywords" content="app free budget finance">
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="main-container">
+        <a class="skip-to-content-link" href="#main">Skip to content</a>
+
+        <nav>
+            <ul>
+                <li><a href="./index.html">Home</a></li>
+            </ul>
+        </nav>
+
+        <div class="hero">
+            <h1>Personal Budget</h1>
+            <h2>A personal-budget management app</h2>
+        </div>
+
+        <main class="center" id="main">
+            <div class="page-area">
+                <h2>Login</h2>
+                <form id="loginForm">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                    <button type="submit">Login</button>
+                    <div id="loginFeedback" style="display: none;"></div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <footer class="bottom">
+        <div class="center">
+            All rights reserved &copy; Fabio Nolasco <br>
+            <a href="mailto:@google.com">Click here to email us.</a>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js"></script>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent the form from submitting normally
+            
+            // Get the values of email and password
+            var email = document.getElementById("email").value;
+            var password = document.getElementById("password").value;
+            
+            // Validate email and password fields
+            if (!email || !password) {
+                var loginFeedback = document.getElementById("loginFeedback");
+                loginFeedback.innerText = "Please enter both email and password.";
+                loginFeedback.style.display = "block";
+                return;
+            }
+            
+            // Show login feedback
             var loginFeedback = document.getElementById("loginFeedback");
-            loginFeedback.innerText = "Please enter both email and password.";
-            loginFeedback.style.display = "block";
-            return;
-        }
-        
-        // Show login feedback
-        var loginFeedback = document.getElementById("loginFeedback");
-        loginFeedback.style.display = "none";
-        
-        // Send the login request to the backend server
-        axios.post("/login", { email: email, password: password })
-            .then(function(response) {
-                // Store the token securely (e.g., in local storage)
-                localStorage.setItem("token", response.data.token);
-                // Redirect to the dashboard page
-                window.location.href = "dashboard.html";
-            })
-            .catch(function(error) {
-                // Handle login error
-                console.error("Login error:", error);
-                if (error.response && error.response.status === 401) {
-                    // Unauthorized: Token expired or authentication failed
-                    // Redirect to dashboard page without authentication
-                    window.location.href = "dashboard.html";
-                } else {
-                    loginFeedback.innerText = "An error occurred while logging in. Please try again later.";
-                    loginFeedback.style.display = "block";
-                }
-            });
-    });
+            loginFeedback.style.display = "none";
+            
+            // Send the login request to the backend server
+            axios.post("/login", { email: email, password: password })
+                .then(function(response) {
+                    // Check if login was successful (server should return a JWT token)
+                    // if (response.data && response.data.token) { // Commented out JWT
+                        // Store the token securely (e.g., in local storage)
+                        // localStorage.setItem("token", response.data.token); // Commented out JWT
+                        // Redirect to the dashboard page
+                        window.location.href = "dashboard.html";
+                    // } else { // Commented out JWT
+                        // Handle login failure (e.g., display an error message)
+                        // loginFeedback.innerText = "Invalid email or password."; // Commented out JWT
+                        // loginFeedback.style.display = "block"; // Commented out JWT
+                    // } // Commented out JWT
+                })
+                .catch(function(error) {
+                    // Check if the error is a 401 Unauthorized error
+                    // if (error.response && error.response.status === 401) { // Commented out JWT
+                        // Handle 401 error (e.g., display an error message)
+                        // loginFeedback.innerText = "Unauthorized: Incorrect email or password."; // Commented out JWT
+                        // loginFeedback.style.display = "block"; // Commented out JWT
+                    // } else { // Commented out JWT
+                        // Handle other errors (e.g., display a generic error message)
+                        console.error("Login error:", error);
+                        loginFeedback.innerText = "An error occurred while logging in. Please try again later.";
+                        loginFeedback.style.display = "block";
+                    // } // Commented out JWT
+                });
+        });
 
-    // Function to display token expiry warning
-    function showWarning() {
-        document.getElementById('expirationWarning').style.display = 'block';
-        tokenExpirationWarningTimer = setTimeout(hideWarning, 20000); // Hide warning after 20 seconds
-    }
+        // Token expiry warning
+        // let tokenExpirationWarningTimer; // Commented out JWT
 
-    // Function to hide token expiry warning
-    function hideWarning() {
-        document.getElementById('expirationWarning').style.display = 'none';
-        clearTimeout(tokenExpirationWarningTimer);
-    }
+        // function refreshToken() { // Commented out JWT
+        //     axios.get('http://localhost:3000/refreshToken') // Commented out JWT
+        //         .then(response => { // Commented out JWT
+        //             const { token } = response.data; // Commented out JWT
+        //             localStorage.setItem('token', token); // Commented out JWT
+        //             hideWarning(); // Commented out JWT
+        //             // Redirect to homepage after refreshing token // Commented out JWT
+        //             window.location.href = 'homepage.html'; // Commented out JWT
+        //         }) // Commented out JWT
+        //         .catch(error => { // Commented out JWT
+        //             console.error('Error refreshing token:', error); // Commented out JWT
+        //         }); // Commented out JWT
+        // } // Commented out JWT
 
-    // Check token expiration when the page loads
-    checkTokenExpiration();
-</script>
+        // function showWarning() { // Commented out JWT
+        //     document.getElementById('warning').style.display = 'block'; // Commented out JWT
+        //     tokenExpirationWarningTimer = setTimeout(hideWarning, 20000); // Hide warning after 20 seconds // Commented out JWT
+        // } // Commented out JWT
+
+        // function hideWarning() { // Commented out JWT
+        //     document.getElementById('warning').style.display = 'none'; // Commented out JWT
+        //     clearTimeout(tokenExpirationWarningTimer); // Commented out JWT
+        // } // Commented out JWT
+
+        // function checkTokenExpiration() { // Commented out JWT
+        //     const token = localStorage.getItem('token'); // Commented out JWT
+        //     if (!token) { // Commented out JWT
+        //         // Token not found, redirect to login page // Commented out JWT
+        //         window.location.href = 'login.html'; // Commented out JWT
+        //         return; // Commented out JWT
+        //     } // Commented out JWT
+
+        //     const decodedToken = jwt_decode(token); // Commented out JWT
+        //     const currentTime = Math.floor(Date.now() / 1000); // Get current time in seconds // Commented out JWT
+        //     if (decodedToken.exp - currentTime < 20) { // Less than 20 seconds left until token expiration, show warning // Commented out JWT
+        //         showWarning(); // Commented out JWT
+        //     } // Commented out JWT
+        // } // Commented out JWT
+
+        // // Check token expiration when the page loads // Commented out JWT
+        // checkTokenExpiration(); // Commented out JWT
+
+    </script>
+</body>
+</html>
