@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-// const jwt = require('jsonwebtoken'); // Commented out JWT
+const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const path = require('path');
 const compression = require('compression');
@@ -11,9 +11,8 @@ const Budget = require('./models/myBudget.schema');
 const cookieParser = require('cookie-parser');
 
 const crypto = require('crypto');
-// const secretKey = crypto.randomBytes(32).toString('hex'); // Commented out JWT
-// console.log('Secret Key:', secretKey); // Commented out JWT
-
+const secretKey = crypto.randomBytes(32).toString('hex');
+console.log('Secret Key:', secretKey);
 
 const app = express();
 const port = 3000;
@@ -50,9 +49,9 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 
 // Function to generate JWT token
-// function generateAuthToken(user) { // Commented out JWT
-//   return jwt.sign({ userId: user.id, userEmail: user.email }, secretKey, { expiresIn: '1m' }); // Commented out JWT
-// }
+function generateAuthToken(user) {
+  return jwt.sign({ userId: user.id, userEmail: user.email }, secretKey, { expiresIn: '1m' });
+}
 
 // Signup route
 app.post('/myBudget/users', async (req, res) => {
@@ -67,10 +66,10 @@ app.post('/myBudget/users', async (req, res) => {
       const newUser = new User({ email, password: hashedPassword });
       await newUser.save();
       
-      // const token = generateAuthToken(newUser); // Commented out JWT
-      // res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true }); // Commented out JWT
+      const token = generateAuthToken(newUser);
+      res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true });
       
-      res.status(201).json({ message: 'User created successfully' }); // Removed token from response
+      res.status(201).json({ message: 'User created successfully', token });
   } catch (err) {
       console.error('Error signing up:', err);
       res.status(500).json({ error: 'Internal server error' });
@@ -92,10 +91,10 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // const token = generateAuthToken(user); // Commented out JWT
+    const token = generateAuthToken(user);
 
-    // res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true }); // Commented out JWT
-    res.json({ message: 'Login successful' }); // Removed token from response
+    res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true });
+    res.json({ message: 'Login successful', token });
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -103,35 +102,34 @@ app.post('/login', async (req, res) => {
 });
 
 // Middleware to verify JWT token
-// function verifyToken(req, res, next) { // Commented out JWT
-//   const token = req.cookies.authToken; // Commented out JWT
-//   if (!token) { // Commented out JWT
-//     return res.status(401).json({ error: 'Unauthorized' }); // Commented out JWT
-//   } // Commented out JWT
+function verifyToken(req, res, next) {
+  const token = req.cookies.authToken;
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 
-//   jwt.verify(token, secretKey, (err, decoded) => { // Commented out JWT
-//     if (err) { // Commented out JWT
-//       return res.status(401).json({ error: 'Unauthorized' }); // Commented out JWT
-//     } // Commented out JWT
-//     req.user = decoded; // Commented out JWT
-//     next(); // Commented out JWT
-//   }); // Commented out JWT
-// }
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    req.user = decoded;
+    next();
+  });
+}
 
 // Dashboard route (requires valid JWT token)
-// app.get('/dashboard', verifyToken, (req, res) => { // Commented out JWT
-//   res.sendFile(path.join(__dirname, 'dashboard.html')); // Commented out JWT
-// });
+app.get('/dashboard', verifyToken, (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
 
 // Logout route
-app.post('/logout', (req, res) => { // Removed verifyToken middleware
+app.post('/logout', (req, res) => {
   res.clearCookie('authToken');
   res.status(200).json({ message: 'User signed out successfully' });
 });
 
 // Fetch data from MongoDB and send it as JSON (requires valid JWT token)
-// app.get('/budget', verifyToken, async (req, res) => { // Commented out JWT
-app.get('/budget', async (req, res) => { // Removed verifyToken middleware
+app.get('/budget', verifyToken, async (req, res) => {
   try {
     const data = await Budget.find();
     res.json(data);
@@ -142,8 +140,7 @@ app.get('/budget', async (req, res) => { // Removed verifyToken middleware
 });
 
 // Add new data to MongoDB (requires valid JWT token)
-// app.post('/budget', verifyToken, async (req, res) => { // Commented out JWT
-app.post('/budget', async (req, res) => { // Removed verifyToken middleware
+app.post('/budget', verifyToken, async (req, res) => {
   try {
     const { title, related_value, color } = req.body;
     const newData = new Budget({ title, related_value, color });
@@ -156,8 +153,7 @@ app.post('/budget', async (req, res) => { // Removed verifyToken middleware
 });
 
 // Update existing data in MongoDB by title (requires valid JWT token)
-// app.put('/budget/:title', verifyToken, async (req, res) => { // Commented out JWT
-app.put('/budget/:title', async (req, res) => { // Removed verifyToken middleware
+app.put('/budget/:title', verifyToken, async (req, res) => {
   try {
     const { title } = req.params;
     const { related_value, color } = req.body;
@@ -179,8 +175,7 @@ app.put('/budget/:title', async (req, res) => { // Removed verifyToken middlewar
 });
 
 // Delete existing data from MongoDB (requires valid JWT token)
-// app.delete('/budget/:title', verifyToken, async (req, res) => { // Commented out JWT
-app.delete('/budget/:title', async (req, res) => { // Removed verifyToken middleware
+app.delete('/budget/:title', verifyToken, async (req, res) => {
   try {
     const { title } = req.params;
     const deletedData = await Budget.findOneAndDelete({ title });
@@ -195,8 +190,7 @@ app.delete('/budget/:title', async (req, res) => { // Removed verifyToken middle
 });
 
 // Add a new route to create a new database (requires valid JWT token)
-// app.post('/new-budget', verifyToken, async (req, res) => { // Commented out JWT
-app.post('/new-budget', async (req, res) => { // Removed verifyToken middleware
+app.post('/new-budget', verifyToken, async (req, res) => {
   try {
     // Drop the existing database
     await mongoose.connection.dropDatabase();

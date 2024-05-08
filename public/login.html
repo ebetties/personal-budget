@@ -71,78 +71,65 @@
             // Send the login request to the backend server
             axios.post("/login", { email: email, password: password })
                 .then(function(response) {
-                    // Check if login was successful (server should return a JWT token)
-                    // if (response.data && response.data.token) { // Commented out JWT
-                        // Store the token securely (e.g., in local storage)
-                        // localStorage.setItem("token", response.data.token); // Commented out JWT
-                        // Redirect to the dashboard page
-                        window.location.href = "dashboard.html";
-                    // } else { // Commented out JWT
-                        // Handle login failure (e.g., display an error message)
-                        // loginFeedback.innerText = "Invalid email or password."; // Commented out JWT
-                        // loginFeedback.style.display = "block"; // Commented out JWT
-                    // } // Commented out JWT
+                    // Store the token securely (e.g., in local storage)
+                    localStorage.setItem("token", response.data.token);
+                    // Redirect to the dashboard page
+                    window.location.href = "dashboard.html";
                 })
                 .catch(function(error) {
-                    // Check if the error is a 401 Unauthorized error
-                    // if (error.response && error.response.status === 401) { // Commented out JWT
-                        // Handle 401 error (e.g., display an error message)
-                        // loginFeedback.innerText = "Unauthorized: Incorrect email or password."; // Commented out JWT
-                        // loginFeedback.style.display = "block"; // Commented out JWT
-                    // } else { // Commented out JWT
-                        // Handle other errors (e.g., display a generic error message)
-                        console.error("Login error:", error);
-                        loginFeedback.innerText = "An error occurred while logging in. Please try again later.";
-                        loginFeedback.style.display = "block";
-                    // } // Commented out JWT
+                    // Handle login error
+                    console.error("Login error:", error);
+                    loginFeedback.innerText = "An error occurred while logging in. Please try again later.";
+                    loginFeedback.style.display = "block";
                 });
         });
 
-        // Token expiry warning
-        // let tokenExpirationWarningTimer; // Commented out JWT
+        // Function to check token expiration
+        function checkTokenExpiration() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // Token not found, redirect to login page
+                window.location.href = 'login.html';
+                return;
+            }
 
-        // function refreshToken() { // Commented out JWT
-        //     axios.get('http://localhost:3000/refreshToken') // Commented out JWT
-        //         .then(response => { // Commented out JWT
-        //             const { token } = response.data; // Commented out JWT
-        //             localStorage.setItem('token', token); // Commented out JWT
-        //             hideWarning(); // Commented out JWT
-        //             // Redirect to homepage after refreshing token // Commented out JWT
-        //             window.location.href = 'homepage.html'; // Commented out JWT
-        //         }) // Commented out JWT
-        //         .catch(error => { // Commented out JWT
-        //             console.error('Error refreshing token:', error); // Commented out JWT
-        //         }); // Commented out JWT
-        // } // Commented out JWT
+            const decodedToken = jwt_decode(token);
+            const currentTime = Math.floor(Date.now() / 1000);
+            if (decodedToken.exp - currentTime < 20) {
+                // Less than 20 seconds left until token expiration, show warning
+                showWarning();
+            }
+        }
 
-        // function showWarning() { // Commented out JWT
-        //     document.getElementById('warning').style.display = 'block'; // Commented out JWT
-        //     tokenExpirationWarningTimer = setTimeout(hideWarning, 20000); // Hide warning after 20 seconds // Commented out JWT
-        // } // Commented out JWT
+        // Function to refresh token
+        function refreshToken() {
+            axios.get('http://localhost:3000/refreshToken')
+                .then(response => {
+                    const { token } = response.data;
+                    localStorage.setItem('token', token);
+                    hideWarning();
+                    // Redirect to homepage after refreshing token
+                    window.location.href = 'homepage.html';
+                })
+                .catch(error => {
+                    console.error('Error refreshing token:', error);
+                });
+        }
 
-        // function hideWarning() { // Commented out JWT
-        //     document.getElementById('warning').style.display = 'none'; // Commented out JWT
-        //     clearTimeout(tokenExpirationWarningTimer); // Commented out JWT
-        // } // Commented out JWT
+        // Function to display token expiry warning
+        function showWarning() {
+            document.getElementById('warning').style.display = 'block';
+            tokenExpirationWarningTimer = setTimeout(hideWarning, 20000); // Hide warning after 20 seconds
+        }
 
-        // function checkTokenExpiration() { // Commented out JWT
-        //     const token = localStorage.getItem('token'); // Commented out JWT
-        //     if (!token) { // Commented out JWT
-        //         // Token not found, redirect to login page // Commented out JWT
-        //         window.location.href = 'login.html'; // Commented out JWT
-        //         return; // Commented out JWT
-        //     } // Commented out JWT
+        // Function to hide token expiry warning
+        function hideWarning() {
+            document.getElementById('warning').style.display = 'none';
+            clearTimeout(tokenExpirationWarningTimer);
+        }
 
-        //     const decodedToken = jwt_decode(token); // Commented out JWT
-        //     const currentTime = Math.floor(Date.now() / 1000); // Get current time in seconds // Commented out JWT
-        //     if (decodedToken.exp - currentTime < 20) { // Less than 20 seconds left until token expiration, show warning // Commented out JWT
-        //         showWarning(); // Commented out JWT
-        //     } // Commented out JWT
-        // } // Commented out JWT
-
-        // // Check token expiration when the page loads // Commented out JWT
-        // checkTokenExpiration(); // Commented out JWT
-
+        // Check token expiration when the page loads
+        checkTokenExpiration();
     </script>
 </body>
 </html>
