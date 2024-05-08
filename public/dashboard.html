@@ -111,8 +111,7 @@
         </div>
 
 
-       <br><br><br> <!-- Removed the </br> tag -->
-       <button id="newBudgetBtn">New/Reset Budget</button>
+       <br><br><br></br> <button id="newBudgetBtn">New/Reset Budget</button>
     </main>
 
     <footer class="bottom">
@@ -125,12 +124,7 @@
     <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js"></script>
-
-<!-- HTML for token expiration warning popup -->
-<div id="expirationWarning" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px; border: 1px solid #ccc; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);">
-    <p>Your session is about to expire. Please refresh your session to continue.</p>
-    <button onclick="dismissExpirationWarning()">Dismiss</button>
-</div>
+    <script src="tokenManagement.js"></script> <!-- Include token management script -->
 
     <script>
 
@@ -486,9 +480,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fetch budget data and refresh UI
     fetchDataAndRefreshUI();
 
-    
-// Set budget button click event listener
-document.getElementById('setBudgetBtn').addEventListener('click', function(event) {
+    // Set budget button click event listener
+    document.getElementById('setBudgetBtn').addEventListener('click', function(event) {
         event.preventDefault();
 
         // Get the entered budget value
@@ -505,59 +498,90 @@ document.getElementById('setBudgetBtn').addEventListener('click', function(event
             alert('Please enter a valid budget amount.');
         }
     });
-
-    document.getElementById('newBudgetBtn').addEventListener('click', function() {
-        axios.post('http://localhost:3000/new-budget')
-            .then(response => {
-                alert('New budget created successfully');
-                // Optionally, you can reload the page or update the UI as needed
-            })
-            .catch(error => {
-                console.error('Error creating new budget:', error);
-                alert('An error occurred while creating the new budget. Please try again later.');
-            });
-    });
-
-    // Fetch data and refresh UI function
-    function fetchDataAndRefreshUI() {
-        const storedToken = localStorage.getItem('token');
-
-        // Check if a token is stored
-        if (storedToken) {
-            axios.get('http://localhost:3000/budget', {
-                headers: {
-                    Authorization: `Bearer ${storedToken}` // Attach the token to the request headers
-                }
-            })
-                .then(response => {
-                    // Data fetched successfully
-                    const responseData = response.data;
-                    updateUI(responseData);
-                    createCharts(responseData); // Call chart creation function after fetching data
-                })
-                .catch(error => {
-                    // Error fetching data
-                    console.error('Error fetching data:', error);
-                    if (error.response && error.response.status === 401) {
-                        // Unauthorized - token expired or invalid
-                        // Redirect the user to the login page
-                        window.location.href = '/login';
-                    } else {
-                        // Other errors
-                        alert('An error occurred while fetching data. Please try again later.');
-                    }
-                });
-        } else {
-            // No token found - redirect the user to the login page
-            window.location.href = '/login';
-        }
-    }
 });
 
-function dismissExpirationWarning() {
-    document.getElementById('expirationWarning').style.display = 'none';
+document.getElementById('newBudgetBtn').addEventListener('click', function() {
+  axios.post('http://localhost:3000/new-budget')
+    .then(response => {
+      alert('New budget created successfully');
+      // Optionally, you can reload the page or update the UI as needed
+    })
+    .catch(error => {
+      console.error('Error creating new budget:', error);
+      alert('An error occurred while creating the new budget. Please try again later.');
+    });
+});
+
+
+function fetchDataAndRefreshUI() {
+    // Get the stored monthly budget value from localStorage
+    const storedBudget = localStorage.getItem('monthlyBudget');
+
+    // Check if a budget is already set
+    if (storedBudget !== null) {
+        // Fetch budget data from server
+        axios.get('http://localhost:3000/budget')
+            .then(response => {
+                const responseData = response.data;
+
+                // Calculate total budget for the month
+                const totalBudget = responseData.reduce((acc, item) => acc + item.related_value, 0);
+
+                // Render total budget in HTML
+                document.getElementById('budgetUsed').textContent = `Budget Used: $${totalBudget}`;
+
+                // Parse the stored budget to a number
+                const budgetForMonth = parseFloat(storedBudget);
+
+                // Calculate budget over/under amount
+                const budgetOverUnder = totalBudget - budgetForMonth;
+
+                // Render budget over/under amount in HTML
+                const budgetOverUnderText = budgetOverUnder >= 0 ? `Budget Over: $${budgetOverUnder}` : `Budget Under: $${-budgetOverUnder}`;
+                const budgetOverUnderElement = document.getElementById('budgetOverUnder'); // Added this line
+                budgetOverUnderElement.textContent = budgetOverUnderText;
+
+                // Change text color based on budget over/under
+                if (budgetOverUnder >= 0) {
+                    budgetOverUnderElement.style.color = 'red'; // Budget over, set text color to red
+                } else {
+                    budgetOverUnderElement.style.color = 'green'; // Budget under, set text color to green
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+    }
 }
+
+
+axios.post('http://localhost:3000/login', { email, password })
+    .then(response => {
+        window.location.href = '/dashboard'; // Redirect to the dashboard page
+    })
+    .catch(error => {
+        console.error('Error logging in:', error);
+        // Handle login error
+        alert('Invalid email or password');
+    });
+
+
+
+    axios.post('http://localhost:3000/login', { email, password })
+    .then(response => {
+        const token = response.data.token;
+        localStorage.setItem('token', token); // Store the token in local storage
+        window.location.href = '/dashboard'; // Redirect to the dashboard page
+    })
+    .catch(error => {
+        console.error('Error logging in:', error);
+        // Handle login error
+        alert('Invalid email or password');
+    });
+
+
+
+    </script>
     
-</script>
 </body>
 </html>

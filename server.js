@@ -1,24 +1,20 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-// const jwt = require('jsonwebtoken'); // Commented out
 const bodyParser = require('body-parser');
 const path = require('path');
 const compression = require('compression');
 const bcrypt = require('bcrypt');
+const cookieParser = require('cookie-parser');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken'); // Add JWT import
 
 const Budget = require('./models/myBudget.schema');
-const cookieParser = require('cookie-parser');
-
-const crypto = require('crypto');
-const secretKey = crypto.randomBytes(32).toString('hex');
-console.log('Secret Key:', secretKey);
 
 const app = express();
 const port = 3000;
 
 app.use(cookieParser());
-
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -26,7 +22,8 @@ app.use(bodyParser.json());
 app.use(compression());
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://doadmin:07JndKlv94851ab3@mybudget-ad997177.mongo.ondigitalocean.com/myBudget?tls=true&authSource=admin&replicaSet=mybudget',{
+//mongoose.connect('mongodb+srv://doadmin:07JndKlv94851ab3@mybudget-ad997177.mongo.ondigitalocean.com/myBudget',{
+  mongoose.connect('mongodb+srv://doadmin:07JndKlv94851ab3@mybudget-ad997177.mongo.ondigitalocean.com/admin?tls=true&authSource=admin', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
@@ -48,10 +45,13 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 
+const secretKey = crypto.randomBytes(32).toString('hex');
+console.log('Secret Key:', secretKey);
+
 // Function to generate JWT token
-// function generateAuthToken(user) {
-//   return jwt.sign({ userId: user.id, userEmail: user.email }, secretKey, { expiresIn: '1m' });
-// }
+function generateAuthToken(user) {
+  return jwt.sign({ userId: user.id, userEmail: user.email }, secretKey, { expiresIn: '1h' }); // Token expires in 1 hour
+}
 
 // Login endpoint
 app.post('/login', async (req, res) => {
@@ -68,36 +68,66 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // const token = generateAuthToken(user);
+    const token = generateAuthToken(user);
 
-    // res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true });
-    res.json({ message: 'Login successful' /*, token */ });
+    res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true }); // Secure cookie
+
+    res.json({ message: 'Login successful', token });
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
+
+// Signup endpoint
+app.post('/signup', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check if the user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new user
+    const newUser = new User({ email, password: hashedPassword });
+    await newUser.save();
+
+    // Generate JWT token
+    const token = generateAuthToken(newUser);
+
+    // Set JWT token in cookie
+    res.cookie('authToken', token, { httpOnly: true, sameSite: 'None', secure: true }); // Secure cookie
+
+    // Send response
+    res.status(201).json({ message: 'Signup successful', token });
+  } catch (error) {
+    console.error('Error signing up:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 // Middleware to verify JWT token
-// function verifyToken(req, res, next) {
-//   const token = req.cookies.authToken;
-//   if (!token) {
-//     return res.status(401).json({ error: 'Unauthorized' });
-//   }
+function verifyToken(req, res, next) {
+  const token = req.cookies.authToken;
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 
-//   jwt.verify(token, secretKey, (err, decoded) => {
-//     if (err) {
-//       return res.status(401).json({ error: 'Unauthorized' });
-//     }
-//     req.user = decoded;
-//     next();
-//   });
-// }
-
-// Dashboard route (requires valid JWT token)
-// app.get('/dashboard', verifyToken, (req, res) => {
-//   res.sendFile(path.join(__dirname, 'dashboard.html'));
-// });
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    req.user = decoded;
+    next();
+  });
+}
 
 // Logout route
 app.post('/logout', (req, res) => {
@@ -105,8 +135,8 @@ app.post('/logout', (req, res) => {
   res.status(200).json({ message: 'User signed out successfully' });
 });
 
-// Fetch data from MongoDB and send it as JSON (requires valid JWT token)
-app.get('/budget', /* verifyToken, */ async (req, res) => {
+// Fetch data from MongoDB (requires valid JWT token)
+app.get('/budget', verifyToken, async (req, res) => {
   try {
     const data = await Budget.find();
     res.json(data);
@@ -117,7 +147,7 @@ app.get('/budget', /* verifyToken, */ async (req, res) => {
 });
 
 // Add new data to MongoDB (requires valid JWT token)
-app.post('/budget', /* verifyToken, */ async (req, res) => {
+app.post('/budget', verifyToken, async (req, res) => {
   try {
     const { title, related_value, color } = req.body;
     const newData = new Budget({ title, related_value, color });
@@ -130,20 +160,17 @@ app.post('/budget', /* verifyToken, */ async (req, res) => {
 });
 
 // Update existing data in MongoDB by title (requires valid JWT token)
-app.put('/budget/:title', /* verifyToken, */ async (req, res) => {
+app.put('/budget/:title', verifyToken, async (req, res) => {
   try {
     const { title } = req.params;
     const { related_value, color } = req.body;
     
-    // Find and update the document by title
     const updatedData = await Budget.findOneAndUpdate({ title }, { related_value, color }, { new: true });
     
-    // Check if the document was found and updated
     if (!updatedData) {
       return res.status(404).json({ error: 'Data not found' });
     }
 
-    // Send the updated document as the response
     res.json(updatedData);
   } catch (err) {
     console.error('Error updating data:', err);
@@ -152,7 +179,7 @@ app.put('/budget/:title', /* verifyToken, */ async (req, res) => {
 });
 
 // Delete existing data from MongoDB (requires valid JWT token)
-app.delete('/budget/:title', /* verifyToken, */ async (req, res) => {
+app.delete('/budget/:title', verifyToken, async (req, res) => {
   try {
     const { title } = req.params;
     const deletedData = await Budget.findOneAndDelete({ title });
@@ -167,7 +194,7 @@ app.delete('/budget/:title', /* verifyToken, */ async (req, res) => {
 });
 
 // Add a new route to create a new database (requires valid JWT token)
-app.post('/new-budget', /* verifyToken, */ async (req, res) => {
+app.post('/new-budget', verifyToken, async (req, res) => {
   try {
     // Drop the existing database
     await mongoose.connection.dropDatabase();

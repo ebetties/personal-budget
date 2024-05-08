@@ -68,7 +68,7 @@
         signupFeedback.style.display = "none";
         
         // Send the signup request to the backend server using Axios
-        axios.post("/myBudget/users", { email: email, password: password })
+        axios.post("/signup", { email: email, password: password })
             .then(function(response) {
                 // Check if response.data contains an error property
                 if (response.data && response.data.error) {
@@ -96,3 +96,5 @@
             });
     });
 </script>
+</body>
+</html>

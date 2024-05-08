@@ -47,13 +47,8 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js"></script>
+    <script src="tokenManagement.js"></script> <!-- Include token management script -->
 
-
-    <!-- HTML for token expiration warning popup -->
-    <!-- <div id="expirationWarning" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px; border: 1px solid #ccc; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);"> -->
-    <!--     <p>Your session is about to expire. Please refresh your session to continue.</p> -->
-    <!--     <button onclick="dismissExpirationWarning()">Dismiss</button> -->
-    <!-- </div> -->
     <script>
         document.getElementById("loginForm").addEventListener("submit", function(event) {
             event.preventDefault(); // Prevent the form from submitting normally
@@ -78,7 +73,7 @@
             axios.post("/login", { email: email, password: password })
                 .then(function(response) {
                     // Store the token securely (e.g., in local storage)
-                    // localStorage.setItem("token", response.data.token);
+                    localStorage.setItem("token", response.data.token);
                     // Redirect to the dashboard page
                     window.location.href = "dashboard.html";
                 })
@@ -90,36 +85,35 @@
                 });
         });
 
-       
         // Function to refresh token
-        // function refreshToken() {
-        //     axios.get('http://localhost:3000/refreshToken')
-        //         .then(response => {
-        //             const { token } = response.data;
-        //             localStorage.setItem('token', token);
-        //             hideWarning();
-        //             // Redirect to homepage after refreshing token
-        //             window.location.href = 'homepage.html';
-        //         })
-        //         .catch(error => {
-        //             console.error('Error refreshing token:', error);
-        //         });
-        // }
+        function refreshToken() {
+            axios.get('http://localhost:3000/refreshToken')
+                .then(response => {
+                    const { token } = response.data;
+                    localStorage.setItem('token', token);
+                    hideWarning();
+                    // Redirect to homepage after refreshing token
+                    window.location.href = 'homepage.html';
+                })
+                .catch(error => {
+                    console.error('Error refreshing token:', error);
+                });
+        }
 
         // Function to display token expiry warning
-        // function showWarning() {
-        //     document.getElementById('warning').style.display = 'block';
-        //     tokenExpirationWarningTimer = setTimeout(hideWarning, 20000); // Hide warning after 20 seconds
-        // }
+        function showWarning() {
+            document.getElementById('expirationWarning').style.display = 'block';
+            tokenExpirationWarningTimer = setTimeout(hideWarning, 20000); // Hide warning after 20 seconds
+        }
 
         // Function to hide token expiry warning
-        // function hideWarning() {
-        //     document.getElementById('warning').style.display = 'none';
-        //     clearTimeout(tokenExpirationWarningTimer);
-        // }
+        function hideWarning() {
+            document.getElementById('expirationWarning').style.display = 'none';
+            clearTimeout(tokenExpirationWarningTimer);
+        }
 
         // Check token expiration when the page loads
-        // checkTokenExpiration();
+        checkTokenExpiration();
     </script>
 </body>
 </html>
