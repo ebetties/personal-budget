@@ -80,11 +80,17 @@
                 .catch(function(error) {
                     // Handle login error
                     console.error("Login error:", error);
-                    loginFeedback.innerText = "An error occurred while logging in. Please try again later.";
-                    loginFeedback.style.display = "block";
+                    if (error.response && error.response.status === 401) {
+                        // Unauthorized: Token expired or authentication failed
+                        // Redirect to index page without authentication
+                        window.location.href = "index.html";
+                    } else {
+                        loginFeedback.innerText = "An error occurred while logging in. Please try again later.";
+                        loginFeedback.style.display = "block";
+                    }
                 });
         });
-
+    
         // Function to refresh token
         function refreshToken() {
             axios.get('http://localhost:3000/refreshToken')
@@ -92,28 +98,29 @@
                     const { token } = response.data;
                     localStorage.setItem('token', token);
                     hideWarning();
-                    // Redirect to homepage after refreshing token
-                    window.location.href = 'homepage.html';
+                    // Redirect to index page after refreshing token
+                    window.location.href = 'index.html';
                 })
                 .catch(error => {
                     console.error('Error refreshing token:', error);
                 });
         }
-
+    
         // Function to display token expiry warning
         function showWarning() {
             document.getElementById('expirationWarning').style.display = 'block';
             tokenExpirationWarningTimer = setTimeout(hideWarning, 20000); // Hide warning after 20 seconds
         }
-
+    
         // Function to hide token expiry warning
         function hideWarning() {
             document.getElementById('expirationWarning').style.display = 'none';
             clearTimeout(tokenExpirationWarningTimer);
         }
-
+    
         // Check token expiration when the page loads
         checkTokenExpiration();
     </script>
+    
 </body>
 </html>
