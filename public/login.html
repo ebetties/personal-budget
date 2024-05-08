@@ -90,23 +90,7 @@
                 });
         });
 
-        // Function to check token expiration
-        function checkTokenExpiration() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                // Token not found, redirect to login page
-                window.location.href = 'login.html';
-                return;
-            }
-
-            const decodedToken = jwt_decode(token);
-            const currentTime = Math.floor(Date.now() / 1000);
-            if (decodedToken.exp - currentTime < 20) {
-                // Less than 20 seconds left until token expiration, show warning
-                showWarning();
-            }
-        }
-
+       
         // Function to refresh token
         function refreshToken() {
             axios.get('http://localhost:3000/refreshToken')
