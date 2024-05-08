@@ -569,12 +569,8 @@ axios.post('http://localhost:3000/login', { email, password })
        const token = response.data.token;
        localStorage.setItem('token', token); // Store the token in local storage
      window.location.href = '/dashboard'; // Redirect to the dashboard page
-    })
-    .catch(error => {
-       console.error('Error logging in:', error);
-        // Handle login error
-       alert('Invalid email or password');
-   });
+    });
+
 
 
     </script>
